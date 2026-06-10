@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <base target="_top">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PETA BANDAR LAMPUNG</title>
+    <link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet.AJAX untuk GeoJSON -->
+    <script src="https://cdn.jsdelivr.net/gh/calvinmetcalf/leaflet-ajax@gh-pages/dist/leaflet.ajax.js"></script>
+    <!-- Font Awesome 6 untuk ikon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        /* Styling untuk legend */
+        
+        .info {
+            padding: 6px 8px;
+            font: 14px/16px Arial, Helvetica, sans-serif;
+            background: white;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+        
+        .legend {
+            line-height: 18px;
+            color: #555;
+        }
+        
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        /* Custom CSS untuk ikon marker */
+        
+        .rs-icon {
+            background-color: #e74c3c;
+            border: 2px solid white;
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .sekolah-icon {
+            background-color: #2ecc71;
+            border: 2px solid white;
+            color: white;
+            font-size: 14px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .wisata-icon {
+            background-color: #3498db;
+            border: 2px solid white;
+            color: white;
+            font-size: 14px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <div id="map"></div>
+
+    <script>
+        // ==================== INISIALISASI PETA ====================
+        // Titik pusat: Bandar Lampung
+        const map = L.map('map').setView([-5.429, 105.262], 12);
+
+        // Membuat pane untuk mengatur z-index
+        map.createPane('polygonPane');
+        map.getPane('polygonPane').style.zIndex = 600;
+
+        map.createPane('circlePane');
+        map.getPane('circlePane').style.zIndex = 650;
+
+        map.createPane('markerPane');
+        map.getPane('markerPane').style.zIndex = 700;
+
+        // ==================== BASEMAP ====================
+        // Menggunakan tile server CartoDB (tidak memerlukan referer)
+        const tiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        // ==================== MEMBUAT IKON KUSTOM ====================
+
+        // Ikon Rumah Sakit (Plus Merah)
+        const rsIcon = L.divIcon({
+            className: 'custom-icon',
+            html: '<div class="rs-icon"><i class="fas fa-plus" style="color:white; font-size: 16px;"></i></div>',
+            iconSize: [32, 32],
+            popupAnchor: [0, -16]
+        });
+
+        // Ikon Sekolah (Topi Toga)
+        const sekolahIcon = L.divIcon({
+            className: 'custom-icon',
+            html: '<div class="sekolah-icon"><i class="fas fa-graduation-cap" style="color:white; font-size: 16px;"></i></div>',
+            iconSize: [32, 32],
+            popupAnchor: [0, -16]
+        });
+
+        // Ikon Wisata (Pantai)
+        const wisataIcon = L.divIcon({
+            className: 'custom-icon',
+            html: '<div class="wisata-icon"><i class="fas fa-umbrella-beach" style="color:white; font-size: 16px;"></i></div>',
+            iconSize: [32, 32],
+            popupAnchor: [0, -16]
+        });
+
+        // ==================== 1. MARKER RUMAH SAKIT (2 buah) ====================
+
+        // RS 1: Rumah Sakit Abdul Moeloek (RSUP Provinsi Lampung)
+        const rs1 = L.marker([-5.4030, 105.2660], {
+                icon: rsIcon,
+                pane: 'markerPane'
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>🏥 RS ABDUL MOELOEK</b><br>
+                Rumah Sakit Umum Pusat Provinsi Lampung<br>
+                📍 Jl. Dr. Sutomo No. 1, Rajabasa, Bandar Lampung<br>
+                ☎️ (0721) 705031<br>
+                ⭐ Kelas A Pendidikan<br>
+                🏆 Rujukan Nasional Wilayah Barat
+            `)
+            .bindTooltip("RS Abdul Moeloek", {
+                sticky: true
+            });
+
+        // RS 2: Rumah Sakit Bina Kasih
+        const rs2 = L.marker([-5.4150, 105.2650], {
+                icon: rsIcon,
+                pane: 'markerPane'
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>🏥 RS BINA KASIH</b><br>
+                Rumah Sakit Swasta Terpadu<br>
+                📍 Jl. ZA. Pagar Alam No. 28, Gedong Air, Bandar Lampung<br>
+                ☎️ (0721) 783333<br>
+                ⭐ Kelas B<br>
+                🚑 Unit Gawat Darurat 24 Jam
+            `)
+            .bindTooltip("RS Bina Kasih", {
+                sticky: true
+            });
+
+        // ==================== 2. MARKER SEKOLAH (2 buah) ====================
+
+        // Sekolah 1: SMAN 2 Bandar Lampung
+        const school1 = L.marker([-5.4310, 105.2790], {
+                icon: sekolahIcon,
+                pane: 'markerPane'
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>🎓 SMAN 2 BANDAR LAMPUNG</b><br>
+                Sekolah Menengah Atas Negeri Unggulan<br>
+                📍 Jl. Bhayangkara No. 1, Kedaton, Bandar Lampung<br>
+                🏆 Akreditasi A (Unggul)<br>
+                🌟 Sekolah Rujukan Nasional
+            `)
+            .bindTooltip("SMAN 2 Bandar Lampung", {
+                sticky: true
+            });
+
+        // Sekolah 2: SMA YP Unila
+        const school2 = L.marker([-5.3590, 105.2420], {
+                icon: sekolahIcon,
+                pane: 'markerPane'
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>🎓 SMA YP UNILA</b><br>
+                SMA Swasta berbasis Universitas Lampung<br>
+                📍 Jl. Prof. Dr. Ir. Sumantri Brojonegoro No. 1, Gedong Meneng<br>
+                🏆 Unggulan Akademik & Non-Akademik<br>
+                🔬 Laboratorium Lengkap
+            `)
+            .bindTooltip("SMA YP Unila", {
+                sticky: true
+            });
+
+        // ==================== 3. MARKER WISATA (2 buah) ====================
+
+        // Wisata 1: Pantai Mutun
+        const wisata1 = L.marker([-5.8350, 105.2740], {
+                icon: wisataIcon,
+                pane: 'markerPane'
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>🏖️ PANTAI MUTUN</b><br>
+                Wisata Pantai dengan Pasir Putih dan Karang Indah<br>
+                📍 Desa Way Rilau, Kec. Padang Cermin, Pesawaran<br>
+                🕒 Buka 24 jam<br>
+                💰 Tiket: Rp 15.000/orang<br>
+                🎯 Fasilitas: Camping ground, spot foto, restoran
+            `)
+            .bindTooltip("Pantai Mutun", {
+                sticky: true
+            });
+
+        // Wisata 2: Bukit Sakura
+        const wisata2 = L.marker([-5.4100, 105.2520], {
+                icon: wisataIcon,
+                pane: 'markerPane'
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>🌸 BUKIT SAKURA</b><br>
+                Spot Wisata Bunga Sakura dengan View Kota Bandar Lampung<br>
+                📍 Jl. Batu Putu, Kedamaian, Bandar Lampung<br>
+                🕒 07:00 - 18:00 WIB<br>
+                💰 Tiket: Rp 10.000/orang<br>
+                📸 Spot foto Instagramable
+            `)
+            .bindTooltip("Bukit Sakura", {
+                sticky: true
+            });
+
+        // ==================== 4. CIRCLE ZONA BERBAHAYA ====================
+        // Zona bahaya: Sekitar Gunung Anak Krakatau (Selat Sunda) - potensi tsunami dan erupsi
+        const dangerZone = L.circle([-6.1020, 105.4230], {
+                pane: 'circlePane',
+                color: 'red',
+                fillColor: '#f03',
+                fillOpacity: 0.35,
+                weight: 3,
+                radius: 12000 // radius 12 km
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>⚠️ ZONA BERBAHAYA - GUNUNG ANAK KRAKATAU ⚠️</b><br><br>
+                🚨 Area Rawan Bencana:<br>
+                • Letusan Gunung Anak Krakatau<br>
+                • Tsunami (historic 2018)<br>
+                • Awan Panas & Hujan Abu<br><br>
+                📍 Radius: 12 km dari pusat erupsi<br>
+                🚦 Status: Siaga Level II<br>
+                ☎️ BPBD Lampung: (0721) 112<br>
+                <i>Harap waspada dan ikuti arahan evakuasi!</i>
+            `);
+
+        // ==================== 5. POLYGON AREA BARU ====================
+        // Polygon area wisata bahari terpadu (Kawasan Wisata Pantai Mutun - Teluk Kiluan - Krakatau)
+        const tourismArea = L.polygon([
+                [-5.8350, 105.2650], // Pantai Mutun
+                [-5.8600, 105.3100], // Teluk Kiluan
+                [-5.9500, 105.3800], // Perairan Selat Sunda
+                [-6.0200, 105.4230], // Area Gunung Anak Krakatau
+                [-5.8800, 105.4000], // Pulau Sebesi
+                [-5.8000, 105.3200] // Perbatasan Pesawaran
+            ], {
+                pane: 'polygonPane',
+                color: '#ff7800',
+                weight: 3,
+                fillColor: '#ffaa33',
+                fillOpacity: 0.25
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>🗺️ KAWASAN WISATA BAHARI TERPADU LAMPUNG SELATAN</b><br><br>
+                <i>Kawasan Pengembangan Wisata Alam dan Bahari Unggulan</i><br><br>
+                📍 Lokasi Unggulan dalam Kawasan:<br>
+                ✅ Pantai Mutun<br>
+                ✅ Teluk Kiluan (Spot Lumba-lumba)<br>
+                ✅ Gunung Anak Krakatau<br>
+                ✅ Pulau Sebesi<br>
+                ✅ Pulau Sangiang<br>
+                ✅ Pantai Ketapang<br><br>
+                <b>🌟 Potensi Wisata Unggulan Provinsi Lampung 🌟</b>
+            `);
+
+        // Polygon tambahan: Area Kampus dan Pendidikan (Kampus Unila - Pusat Pendidikan)
+        const educationArea = L.polygon([
+                [-5.3630, 105.2350],
+                [-5.3680, 105.2480],
+                [-5.3600, 105.2530],
+                [-5.3530, 105.2420],
+                [-5.3550, 105.2350]
+            ], {
+                pane: 'polygonPane',
+                color: '#2980b9',
+                weight: 2.5,
+                fillColor: '#3498db',
+                fillOpacity: 0.2
+            })
+            .addTo(map)
+            .bindPopup(`
+                <b>🎓 KAWASAN PENDIDIKAN UNIVERSITAS LAMPUNG (UNILA)</b><br><br>
+                <i>Pusat Pendidikan Tertinggi di Provinsi Lampung</i><br><br>
+                📍 Luas Area: ± 112 hektar<br>
+                🎓 Fakultas Unggulan:<br>
+                • Fakultas Ekonomi dan Bisnis<br>
+                • Fakultas Hukum<br>
+                • Fakultas Teknik<br>
+                • Fakultas Keguruan dan Ilmu Pendidikan<br>
+                • Fakultas Pertanian<br>
+                • Fakultas Matematika dan Ilmu Pengetahuan Alam<br>
+                • Fakultas Ilmu Sosial dan Ilmu Politik<br>
+                • Fakultas Kedokteran<br>
+                📚 Jumlah Mahasiswa: ± 30.000<br>
+                ⭐ Akreditasi Unggul BAN-PT<br>
+                🏆 Peringkat Top 20 Universitas Terbaik Indonesia
+            `);
+
+        // ==================== LOAD GEOJSON LAMPUNG ====================
+        // Popup untuk GeoJSON
+        function popUp(feature, layer) {
+            const out = [];
+            if (feature.properties) {
+                for (var key in feature.properties) {
+                    out.push("<b>" + key + "</b>: " + feature.properties[key]);
+                }
+                layer.bindPopup(out.join("<br>"));
+            } else {
+                layer.bindPopup("📌 Informasi wilayah Bandar Lampung");
+            }
+        }
+
+        // Load file GeoJSON Lampung (jika tersedia)
+        const lampungGeoJSON = new L.GeoJSON.AJAX(
+            "geojson-lampung.geojson", {
+                onEachFeature: popUp,
+                style: {
+                    color: '#2c3e50',
+                    weight: 2,
+                    fillColor: '#3498db',
+                    fillOpacity: 0.15
+                }
+            }
+        ).addTo(map);
+
+        // Event setelah GeoJSON selesai dimuat
+        lampungGeoJSON.on('data:loaded', function() {
+            lampungGeoJSON.bringToBack();
+            tourismArea.bringToFront();
+            educationArea.bringToFront();
+            dangerZone.bringToFront();
+            rs1.bringToFront();
+            rs2.bringToFront();
+            school1.bringToFront();
+            school2.bringToFront();
+            wisata1.bringToFront();
+            wisata2.bringToFront();
+            console.log("✅ GeoJSON Lampung berhasil dimuat");
+        });
+
+        // Error handling jika GeoJSON gagal dimuat
+        lampungGeoJSON.on('data:error', function(error) {
+            console.warn("⚠️ File GeoJSON tidak ditemukan, peta tetap berjalan dengan marker dan polygon");
+        });
+
+        // ==================== POPUP INTERAKTIF ====================
+        // Popup info awal
+        const welcomePopup = L.popup()
+            .setLatLng([-5.429, 105.262])
+            .setContent(`
+                <b>🌏 SELAMAT DATANG DI PETA BANDAR LAMPUNG</b><br><br>
+                📍 Ibu Kota Provinsi Lampung<br>
+                🗺️ Dikenal dengan julukan "Kota Kain Tapis"<br>
+                🌊 Gerbang menuju Kawasan Wisata Selat Sunda - Gunung Anak Krakatau<br>
+                📊 Total Populasi: ± 1.200.000 jiwa<br><br>
+                <i>✨ Klik pada marker untuk melihat informasi detail ✨</i>
+            `)
+            .openOn(map);
+
+        // Event klik pada peta untuk menampilkan koordinat
+        function onMapClick(e) {
+            welcomePopup
+                .setLatLng(e.latlng)
+                .setContent(
+                    "📍 KOORDINAT GEOGRAFIS:<br>" +
+                    "Lintang (Latitude): " + e.latlng.lat.toFixed(6) + "°<br>" +
+                    "Bujur (Longitude): " + e.latlng.lng.toFixed(6) + "°<br><br>" +
+                    "<i>💡 Klik marker untuk info lengkap</i>"
+                )
+                .openOn(map);
+        }
+        map.on('click', onMapClick);
+
+        // ==================== LEGEND PETA ====================
+        const legend = L.control({
+            position: 'bottomright'
+        });
+
+        legend.onAdd = function(map) {
+            const div = L.DomUtil.create('div', 'info legend');
+            div.innerHTML = `
+                <b>🗺️ LEGENDA PETA BANDAR LAMPUNG</b><br><br>
+                <i style="background:#e74c3c; width:18px; height:18px; display:inline-block; border-radius:50%;"></i> Rumah Sakit<br>
+                <i style="background:#2ecc71; width:18px; height:18px; display:inline-block; border-radius:50%;"></i> Sekolah<br>
+                <i style="background:#3498db; width:18px; height:18px; display:inline-block; border-radius:50%;"></i> Tempat Wisata<br>
+                <i style="background:red; width:18px; height:18px; display:inline-block; border-radius:50%;"></i> Zona Berbahaya<br>
+                <i style="background:#ffaa33; width:18px; height:18px; display:inline-block;"></i> Kawasan Wisata Bahari<br>
+                <i style="background:#2980b9; width:18px; height:18px; display:inline-block;"></i> Kawasan Pendidikan<br>
+                <i style="background:#2c3e50; width:18px; height:18px; display:inline-block;"></i> Wilayah Administrasi<br>
+                <hr>
+                <small>Peta Interaktif - Bandar Lampung<br>Dibuat dengan Leaflet</small>
+            `;
+            return div;
+        };
+
+        legend.addTo(map);
+
+        // ==================== SKALA PETA ====================
+        L.control.scale({
+            metric: true,
+            imperial: false,
+            position: 'bottomleft'
+        }).addTo(map);
+
+        // ==================== TAMPILKAN JUMLAH OBJEK DI CONSOLE ====================
+        console.log("✅ PETA BANDAR LAMPUNG SIAP DIGUNAKAN!");
+        console.log("📋 Daftar Objek pada Peta:");
+        console.log("   🏥 2 Marker Rumah Sakit (RS Abdul Moeloek, RS Bina Kasih)");
+        console.log("   🎓 2 Marker Sekolah (SMAN 2 Bandar Lampung, SMA YP Unila)");
+        console.log("   🏖️ 2 Marker Wisata (Pantai Mutun, Bukit Sakura)");
+        console.log("   ⚠️ 1 Circle Zona Berbahaya (Gunung Anak Krakatau)");
+        console.log("   🗺️ 2 Polygon Area (Kawasan Wisata Bahari, Kampus Unila)");
+    </script>
+
+</body>
+
+</html>
